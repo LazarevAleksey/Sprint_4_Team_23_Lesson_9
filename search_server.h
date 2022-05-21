@@ -1,17 +1,18 @@
 //Вставьте сюда своё решение из урока «‎Очередь запросов».‎
 #pragma once
-#include <vector>
-#include <string>
+//#include <vector>
+//#include <string>
 #include <stdexcept>
 #include <map>
 #include <algorithm>
 #include <set>
 #include <numeric>
+#include <iostream>
 
 #include "string_processing.h"
 #include "document.h"
 
-// using namespace std;
+ using namespace std;
 
 const int MAX_RESULT_DOCUMENT_COUNT = 5;
 
@@ -69,17 +70,6 @@ private:
         DocumentStatus status;
     };
 
-    struct Query {
-        std::set<std::string> plus_words;
-        std::set<std::string> minus_words;
-    };
-
-    struct QueryWord {
-        std::string data;
-        bool is_minus;
-        bool is_stop;
-    };
-
     const std::set<std::string> stop_words_;
     std::map<std::string, std::map<int, double>> word_to_document_freqs_;
     std::map<int, DocumentData> documents_;
@@ -104,23 +94,21 @@ private:
         return rating_sum / static_cast<int>(ratings.size());
     }
 
+    struct QueryWord {
+        std::string data;
+        bool is_minus;
+        bool is_stop;
+    };
+
     QueryWord ParseQueryWord(const std::string& text) const;
 
-    Query ParseQuery(const std::string& text) const {
-        Query result;
-        for (const std::string& word : SplitIntoWords(text)) {
-            const auto query_word = ParseQueryWord(word);
-            if (!query_word.is_stop) {
-                if (query_word.is_minus) {
-                    result.minus_words.insert(query_word.data);
-                }
-                else {
-                    result.plus_words.insert(query_word.data);
-                }
-            }
-        }
-        return result;
-    }
+    struct Query {
+        std::set<std::string> plus_words;
+        std::set<std::string> minus_words;
+    };
+
+    Query ParseQuery(const std::string& text) const;
+
     // Existence required
     double ComputeWordInverseDocumentFreq(const std::string& word) const;
 
@@ -157,3 +145,10 @@ private:
         return matched_documents;
     }
 };
+
+void AddDocument(SearchServer& search_server, int document_id, const std::string& document,
+    DocumentStatus status, const std::vector<int>& ratings);
+
+void FindTopDocuments(const SearchServer& search_server, const std::string& raw_query);
+
+void MatchDocuments(const SearchServer& search_server, const std::string& query);

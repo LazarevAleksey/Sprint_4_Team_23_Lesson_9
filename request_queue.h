@@ -5,7 +5,7 @@
 
 #include"search_server.h"
 
-//using namespace std;
+using namespace std;
 
 // request_queue.h
 class RequestQueue {

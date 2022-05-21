@@ -86,15 +86,15 @@ using namespace std;
             throw std::invalid_argument("Query word is empty"s);
         }
         std::string word = text;
-        bool is_minus = false;
+        bool is_min = false;
         if (word[0] == '-') {
-            is_minus = true;
+            is_min = true;
             word = word.substr(1);
         }
         if (word.empty() || word[0] == '-' || !IsValidWord(word)) {
            throw std::invalid_argument("Query word "s + text + " is invalid");
         }
-        return { word, is_minus, IsStopWord(word) };
+        return { word, is_min, IsStopWord(word) };
     }
     
     Query SearchServer::ParseQuery(const std::string& text) const {
@@ -112,7 +112,45 @@ using namespace std;
         }
         return result;
     }
+
     // Existence required
     double SearchServer::ComputeWordInverseDocumentFreq(const std::string& word) const {
         return log(GetDocumentCount() * 1.0 / word_to_document_freqs_.at(word).size());
+    }
+
+    void AddDocument(SearchServer& search_server, int document_id, const std::string& document,
+        DocumentStatus status, const std::vector<int>& ratings) {
+        try {
+            search_server.AddDocument(document_id, document, status, ratings);
+        }
+        catch (const exception& e) {
+            cout << "Error in adding document "s << document_id << ": "s << e.what() << endl;
+        }
+    }
+
+    void FindTopDocuments(const SearchServer& search_server, const std::string& raw_query) {
+        cout << "Results for request: "s << raw_query << endl;
+        try {
+            for (const Document& document : search_server.FindTopDocuments(raw_query)) {
+                PrintDocument(document);
+            }
+        }
+        catch (const exception& e) {
+            cout << "Error is seaching: "s << e.what() << endl;
+        }
+    }
+
+    void MatchDocuments(const SearchServer& search_server, const std::string& query) {
+        try {
+            cout << "Matching for request: "s << query << endl;
+            const int document_count = search_server.GetDocumentCount();
+            for (int index = 0; index < document_count; ++index) {
+                const int document_id = search_server.GetDocumentId(index);
+                const auto [words, status] = search_server.MatchDocument(query, document_id);
+                PrintMatchDocumentResult(document_id, words, status);
+            }
+        }
+        catch (const exception& e) {
+            cout << "Error in matchig request "s << query << ": "s << e.what() << endl;
+        }
     }
